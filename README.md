@@ -2,7 +2,7 @@
 
 An open-source tuning calculator for **Bosch ME7 / ME7.5 ECUs**, commonly found in Audi, VW, Skoda, and SEAT 1.8T 20V Turbo engines. It reads your XDF definition and BIN file, calculates optimized maps based on your target boost and tuning parameters, and writes a new tuned BIN — no manual cell-by-cell editing required.
 
-![20VT Tuner Helper](screenshot.png)
+![20VT Tuner Helper](screenshot.jpg)
 
 ---
 
@@ -172,7 +172,7 @@ Output: `dist/20VT Tuner Helper.exe` (~12 MB standalone)
 
 - [s4wiki.com/wiki/Tuning](https://s4wiki.com/wiki/Tuning) — ME7 map documentation, formulas, and limits
 - [AliantAuto ME7.5 Stage 2 Guide](https://aliantauto.com/ecu-remap-guide-me7-5-audi-a4-b6-1-8-20v-163hp-stage-2/) — Practical tuning walkthrough and safety guidelines
-- ME7 Tuner Wizard spreadsheet — Original formulas for KFMIRL/KFMIOP/KFZWOP calculation
+- [ME7 Tuner Wizard spreadsheet](https://github.com/z1ck/ME7-Tuner-Wizard-2021) — Original formulas for KFMIRL/KFMIOP/KFZWOP calculation
 
 ---
 
