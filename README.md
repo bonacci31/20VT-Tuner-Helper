@@ -116,7 +116,6 @@ The enrichment calculator modifies LAMFA (preventive at WOT), KFLBTS (reactive a
 - **Lambda floor**: 0.65 (AFR ~9.5) — enrichment never goes below this
 - **KFFDLBTS cap**: 2.0 — no benefit beyond this factor
 - **KFLDHBN clamp**: 4-35 PSI — within ME7 hard limits (~2560 mbar)
-- **LDORXN**: Always calculated below LDRXN (overboost protection)
 
 ---
 
@@ -128,7 +127,6 @@ me7_tune.py         — CLI orchestrator and session management
 tuning_calc.py      — Core map calculations (KFMIRL, KFMIOP, KFZWOP, LDRXN)
 kfldhbn_calc.py     — KFLDHBN boost pressure ratio calculator
 enrichment_calc.py  — LAMFA / KFLBTS / KFFDLBTS fuel enrichment calculator
-ldorxn_calc.py      — LDORXN overboost protection calculator
 xdf_parser.py       — TunerPro XDF file parser
 bin_handler.py      — ECU binary read/write with XDF-defined scaling
 ```
@@ -153,13 +151,11 @@ pyinstaller --onefile --windowed --name "20VT Tuner Helper" \
     --add-data "bin_handler.py;." \
     --add-data "xdf_parser.py;." \
     --add-data "kfldhbn_calc.py;." \
-    --add-data "ldorxn_calc.py;." \
     --add-data "enrichment_calc.py;." \
     --hidden-import=tuning_calc \
     --hidden-import=bin_handler \
     --hidden-import=xdf_parser \
     --hidden-import=kfldhbn_calc \
-    --hidden-import=ldorxn_calc \
     --hidden-import=enrichment_calc \
     me7_gui.py
 ```
