@@ -34,7 +34,38 @@ from enrichment_calc import calc_lamfa_enrichment, calc_kflbts_enrichment, calc_
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-TARGET_MAPS = ['KFMIRL', 'KFMIOP', 'KFZWOP', 'KFZWOP2', 'LDRXN', 'LDRXNZK']
+TARGET_MAPS = [['KFMIRL', 'KFMIOP', 'KFZWOP', 'KFZWOP2', 'LDRXN', 'LDRXNZK'],[]]
+TARGET_MAPS[1] += ['Kennfeld für Berechnung Sollfüllung']
+TARGET_MAPS[1] += ['Kennfeld optimales Motormoment']
+TARGET_MAPS[1] += ['optimaler Zündwinkel']
+TARGET_MAPS[1] += ['optimaler Zündwinkel Variante 2']
+TARGET_MAPS[1] += [ 'Maximalfuellung LDR']
+TARGET_MAPS[1] += ['Maximalfuellung LDR bei Dauerklopfen']
+extra_maps = [['KFLDHBN', 'LAMFA', 'KFLBTS', 'KFFDLBTS'],[]]
+extra_maps[1] += [ 'LDR-Höhenbegrenzung (max. Verdichterdruckverhältnis)']
+extra_maps[1] += [ 'Lambda Fahrerwunsch']
+extra_maps[1] += [ 'Lambdasoll für Bauteileschutz']
+extra_maps[1] += [ 'Faktor Delta Lambdasoll für Bauteileschutz']
+mapsname = TARGET_MAPS[0] + extra_maps[0]
+mapsDesc = TARGET_MAPS[1] + extra_maps[1]
+KFMIRL_Id = mapsname.index('KFMIRL')
+KFMIOP_Id = mapsname.index('KFMIOP')
+KFZWOP_Id = mapsname.index('KFZWOP')
+KFZWOP2_Id = mapsname.index('KFZWOP2')
+LDRXN_Id = mapsname.index('LDRXN')
+LDRXNZK_Id = mapsname.index('LDRXNZK')
+
+KFLDHBN_Id = mapsname.index('KFLDHBN')
+LAMFA_Id = mapsname.index('LAMFA')
+KFLBTS_Id = mapsname.index('KFLBTS')
+KFFDLBTS_Id = mapsname.index('KFFDLBTS')
+
+
+RequiredMaps = ['KFMIRL', 'KFMIOP', 'LDRXN']
+
+map_write_order = ['KFMIRL', 'KFMIOP', 'KFZWOP', 'KFZWOP2', 'LDRXN', 'LDRXNZK',
+                   'KFLDHBN', 'LAMFA', 'KFLBTS', 'KFFDLBTS']
+        
 WINDOW_TITLE = "20VT Tuner Helper by Peter Markou"
 BG_COLOR = "#1e1e2e"
 FG_COLOR = "#cdd6f4"
@@ -146,6 +177,7 @@ class ME7TunerApp:
         self.bin_data = None
         self.base_offset = 0
         self.state = {}
+        self.mapTable = []
 
         # Track which maps are calculated and approved
         self.calculated_maps = {}  # name -> {'original': ..., 'calculated': ...}
@@ -380,16 +412,26 @@ class ME7TunerApp:
         # Check target maps
         self._log("\nMap Availability:")
         all_found = True
-        extra_maps = ['KFLDHBN', 'LAMFA', 'KFLBTS', 'KFFDLBTS']
-        for name in TARGET_MAPS + extra_maps:
+        
+        
+        for name in mapsname:
             table = find_target_map(self.xdf_data, name)
             if table:
                 self._log(f"  ✓ {name:12s} — {table['title']}")
+                self.mapTable += [table]
             else:
-                marker = "✗ REQUIRED" if name in ['KFMIRL', 'KFMIOP', 'LDRXN'] else "✗ optional"
-                self._log(f"  {marker}: {name}")
-                if name in ['KFMIRL', 'KFMIOP', 'LDRXN']:
-                    all_found = False
+                idx = mapsname.index(name)
+                descr = mapsDesc[idx]
+                table = find_target_map(self.xdf_data, descr)
+                if table:
+                    self._log(f"  ✓ {name:12s} — {table['title']}")
+                    self.mapTable += [table]
+                else:
+                    marker = "✗ REQUIRED" if name in RequiredMaps else "✗ optional"
+                    self._log(f"  {marker}: {name}")
+                    self.mapTable += []
+                    if name in RequiredMaps:
+                        all_found = False
 
         if not all_found:
             messagebox.showwarning("Missing Maps", "Some required maps are missing. Calculation may be incomplete.")
@@ -456,7 +498,8 @@ class ME7TunerApp:
     # -----------------------------------------------------------------------
     def _calc_kfmirl(self, boost, aggr, turbo, low_load):
         self._log("\n--- KFMIRL (Engine Load Desired) ---")
-        table = find_target_map(self.xdf_data, 'KFMIRL')
+##        table = find_target_map(self.xdf_data, 'KFMIRL')
+        table = self.mapTable[mapsname.index('KFMIRL')]
         if not table:
             self._log_error("KFMIRL not found in XDF")
             return
@@ -478,7 +521,8 @@ class ME7TunerApp:
         if 'new_kfmirl' not in self.state:
             self._log_error("KFMIRL must be calculated first")
             return
-        table = find_target_map(self.xdf_data, 'KFMIOP')
+##        table = find_target_map(self.xdf_data, 'KFMIOP')
+        table = self.mapTable[mapsname.index('KFMIOP')]
         if not table:
             self._log_error("KFMIOP not found in XDF")
             return
@@ -498,7 +542,8 @@ class ME7TunerApp:
         if 'new_kfmirl' not in self.state:
             self._log_error("KFMIRL must be calculated first")
             return
-        table = find_target_map(self.xdf_data, map_name)
+##        table = find_target_map(self.xdf_data, map_name)
+        table = self.mapTable[mapsname.index(map_name)]
         if not table:
             self._log_error(f"{map_name} not found in XDF")
             return
@@ -519,9 +564,11 @@ class ME7TunerApp:
             self._log_error("KFMIRL must be calculated first")
             return
 
-        ldrxn_table = find_target_map(self.xdf_data, 'LDRXN')
+##        ldrxn_table = find_target_map(self.xdf_data, 'LDRXN')
+        ldrxn_table = self.mapTable[mapsname.index('LDRXN')]
         original_ldrxn = read_map_data(self.bin_data, ldrxn_table, self.base_offset) if ldrxn_table else None
-        ldrxnzk_table = find_target_map(self.xdf_data, 'LDRXNZK')
+##        ldrxnzk_table = find_target_map(self.xdf_data, 'LDRXNZK')
+        ldrxnzk_table = self.mapTable[mapsname.index('LDRXNZK')]
         original_ldrxnzk = read_map_data(self.bin_data, ldrxnzk_table, self.base_offset) if ldrxnzk_table else None
 
         new_ldrxn = calc_ldrxn(self.state['new_kfmirl'], original_ldrxn)
@@ -544,7 +591,8 @@ class ME7TunerApp:
 
     def _calc_kfldhbn(self, boost, turbo):
         self._log("\n--- KFLDHBN (Max Boost Pressure Ratio) ---")
-        kfldhbn_table = find_target_map(self.xdf_data, 'KFLDHBN')
+##        kfldhbn_table = find_target_map(self.xdf_data, 'KFLDHBN')
+        kfldhbn_table = self.mapTable[mapsname.index('KFLDHBN')]
         original = read_map_data(self.bin_data, kfldhbn_table, self.base_offset) if kfldhbn_table else None
 
         result = calc_kfldhbn(boost, turbo, headroom_pct=15, original_map=original)
@@ -572,7 +620,8 @@ class ME7TunerApp:
         self._log(f"\n--- FUEL ENRICHMENT ({enrichment_pct}% richer at WOT/high load) ---")
 
         # LAMFA
-        lamfa_table = find_target_map(self.xdf_data, 'LAMFA')
+##        lamfa_table = find_target_map(self.xdf_data, 'LAMFA')
+        lamfa_table = self.mapTable[mapsname.index('LAMFA')]
         if lamfa_table:
             original_lamfa = read_map_data(self.bin_data, lamfa_table, self.base_offset)
             new_lamfa = calc_lamfa_enrichment(original_lamfa, enrichment_pct)
@@ -586,7 +635,8 @@ class ME7TunerApp:
             self._log("LAMFA: not found in XDF, skipping")
 
         # KFLBTS
-        kflbts_table = find_target_map(self.xdf_data, 'KFLBTS')
+##        kflbts_table = find_target_map(self.xdf_data, 'KFLBTS')
+        kflbts_table = self.mapTable[mapsname.index('KFLBTS')]
         if kflbts_table:
             original_kflbts = read_map_data(self.bin_data, kflbts_table, self.base_offset)
             new_kflbts = calc_kflbts_enrichment(original_kflbts, enrichment_pct)
@@ -600,7 +650,8 @@ class ME7TunerApp:
             self._log("KFLBTS: not found in XDF, skipping")
 
         # KFFDLBTS
-        kffdlbts_table = find_target_map(self.xdf_data, 'KFFDLBTS')
+##        kffdlbts_table = find_target_map(self.xdf_data, 'KFFDLBTS')
+        kffdlbts_table = self.mapTable[mapsname.index('KFFDLBTS')]
         if kffdlbts_table:
             original_kffdlbts = read_map_data(self.bin_data, kffdlbts_table, self.base_offset)
             new_kffdlbts = calc_kffdlbts_enrichment(original_kffdlbts, enrichment_pct)
@@ -772,8 +823,7 @@ class ME7TunerApp:
         modified_bin = bytearray(self.bin_data)
 
         # Write all calculated maps
-        map_write_order = ['KFMIRL', 'KFMIOP', 'KFZWOP', 'KFZWOP2', 'LDRXN', 'LDRXNZK',
-                           'KFLDHBN', 'LAMFA', 'KFLBTS', 'KFFDLBTS']
+
 
         written = []
         for map_name in map_write_order:
@@ -781,7 +831,8 @@ class ME7TunerApp:
             if state_key not in self.state:
                 continue
 
-            table = find_target_map(self.xdf_data, map_name)
+##            table = find_target_map(self.xdf_data, map_name)
+            table = self.mapTable[mapsname.index(map_name)]
             if not table:
                 self._log(f"  ⚠ {map_name}: not found in XDF, skipping")
                 continue
